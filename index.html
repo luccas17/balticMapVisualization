@@ -43,11 +43,6 @@
                         "as": "mean_longitude"
                     },
                     {
-                        "op": "max",
-                        "field": "Temperature",
-                        "as": "max_temp"
-                    },
-                    {
                         "op": "mean",
                         "field": "Temperature",
                         "as": "mean_temp"
@@ -55,7 +50,7 @@
                     "groupby": ["Station name"]
                     },
                     {
-                    "calculate": "'hsl('+(datum.max_temp-datum.mean_temp)*24+', 100%, 50%)'", 
+                    "calculate": "'hsl('+(14-datum.mean_temp)*24+', 100%, 50%)'", 
                     "as": "color"
                     }
                 ],
@@ -72,15 +67,6 @@
                     },
                     "tooltip": [{
                         "field": "Station name"
-                    },
-                    {
-                        "field": "color"
-                    },
-                    {
-                        "field": "mean_temp"
-                    },
-                    {
-                        "field": "max_temp"
                     }],
                     "color": {
                     "field": "color"
