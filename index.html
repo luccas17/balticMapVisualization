@@ -16,53 +16,79 @@
     <script type="text/javascript">
         var yourVlSpec = {
             "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-            "width": 2400,
-            "height": 1600,
+            "width": 1200,
+            "height": 800,
             "layer": [
-            {
+                {
                 "data": {
-                "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
-                "format": {"type": "topojson", "feature": "continent_Europe_subunits"}
+                    "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
+                    "format": {"type": "topojson", "feature": "continent_Europe_subunits"}
                 },
                 "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "gray"}
-            },
-            {
+                },
+                {
                 "data": {
-                "url": "https://luccas17.github.io/vegaliteBalticMap/data/odin2_2023-08-28_113735_comma.csv"
+                    "url": "https://luccas17.github.io/vegaliteBalticMap/data/odin2_2023-08-28_113735_comma.csv"
                 },
                 "transform": [
-                {
+                    {
                     "aggregate": [{
                     "op": "mean",
                     "field": "Latitude",
                     "as": "mean_latitude"
                     }, 
                     {
-                    "op": "mean",
-                    "field": "Longitude",
-                    "as": "mean_longitude"
+                        "op": "mean",
+                        "field": "Longitude",
+                        "as": "mean_longitude"
+                    },
+                    {
+                        "op": "max",
+                        "field": "Temperature",
+                        "as": "max_temp"
+                    },
+                    {
+                        "op": "mean",
+                        "field": "Temperature",
+                        "as": "mean_temp"
                     }],
                     "groupby": ["Station name"]
-                }
+                    },
+                    {
+                    "calculate": "'hsl('+(datum.max_temp-datum.mean_temp)*24+', 100%, 50%)'", 
+                    "as": "color"
+                    }
                 ],
-            "mark": {
+                "mark": {
                 "type": "circle",
                 "size": 100
-            },
-            "encoding": {
-                "longitude": {
-                    "field": "mean_longitude"
                 },
-                "latitude": {
-                    "field": "mean_latitude"
-                },
-                "tooltip": {
-                    "field": "Station name"
+                "encoding": {
+                    "longitude": {
+                        "field": "mean_longitude"
+                    },
+                    "latitude": {
+                        "field": "mean_latitude"
+                    },
+                    "tooltip": [{
+                        "field": "Station name"
+                    },
+                    {
+                        "field": "color"
+                    },
+                    {
+                        "field": "mean_temp"
+                    },
+                    {
+                        "field": "max_temp"
+                    }],
+                    "color": {
+                    "field": "color"
+                    }
                 }
                 }
-            }
             ]
-        }
+            }
         
         vegaEmbed('#vis', yourVlSpec);
     </script>
