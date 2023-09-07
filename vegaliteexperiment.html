@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Embedding Vega-Lite</title>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.25.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.12.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.22.1"></script>
+  </head>
+  <body>
+    <center>
+        <div id="vis"></div>
+    </center>
+
+    <script type="text/javascript">
+        var yourVlSpec = {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            "width": 2400,
+            "height": 1600,
+            "layer": [
+                {
+                    "data": {
+                        "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
+                        "format": {"type": "topojson", "feature": "continent_Europe_subunits"}
+                        //"url": "https://raw.githubusercontent.com/deldersveld/topojson/master/countries/denmark/denmark-counties.json",
+                        //"format": {"type": "topojson", "feature": "DNK_adm1"}
+                    },
+                    "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "gray"}
+                },
+                {
+                    "data": {
+                        //"url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
+                        //"format": {"type": "topojson", "feature": "continent_Europe_subunits"}
+                        "url": "data/odin2_2023-08-28_113735_comma.csv",
+                    },
+                    "mark": {
+                        "type": "circle",
+                        "size": 100
+                    },
+                    "encoding": {
+                        "longitude": {
+                            "field": "Longitude"
+                        },
+                        "latitude": {
+                            "field": "Latitude"
+                        },
+                        "tooltip": {
+                            "field": "Station name"
+                        }
+                    },
+                    "size": {"value": 10},
+                    "color": {"value": "steelblue"}
+                }
+            ]
+        }
+        
+        vegaEmbed('#vis', yourVlSpec);
+    </script>
+  </body>
+</html>
