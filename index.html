@@ -11,45 +11,56 @@
         <div id="vis"></div>
     </center>
 
+<!-- For interacting with the graph https://vega.github.io/vega-lite/docs/selection.html-->
+
     <script type="text/javascript">
         var yourVlSpec = {
             "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
             "width": 2400,
             "height": 1600,
             "layer": [
-                {
-                    "data": {
-                        "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
-                        "format": {"type": "topojson", "feature": "continent_Europe_subunits"}
-                        //"url": "https://raw.githubusercontent.com/deldersveld/topojson/master/countries/denmark/denmark-counties.json",
-                        //"format": {"type": "topojson", "feature": "DNK_adm1"}
-                    },
-                    "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "gray"}
+            {
+                "data": {
+                "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
+                "format": {"type": "topojson", "feature": "continent_Europe_subunits"}
                 },
+                "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "gray"}
+            },
+            {
+                "data": {
+                "url": "https://luccas17.github.io/vegaliteBalticMap/data/odin2_2023-08-28_113735_comma.csv"
+                },
+                "transform": [
                 {
-                    "data": {
-                        //"url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
-                        //"format": {"type": "topojson", "feature": "continent_Europe_subunits"}
-                        "url": "data/odin2_2023-08-28_113735_comma.csv",
-                    },
-                    "mark": {
-                        "type": "circle",
-                        "size": 100
-                    },
-                    "encoding": {
-                        "longitude": {
-                            "field": "Longitude"
-                        },
-                        "latitude": {
-                            "field": "Latitude"
-                        },
-                        "tooltip": {
-                            "field": "Station name"
-                        }
-                    },
-                    "size": {"value": 10},
-                    "color": {"value": "steelblue"}
+                    "aggregate": [{
+                    "op": "mean",
+                    "field": "Latitude",
+                    "as": "mean_latitude"
+                    }, 
+                    {
+                    "op": "mean",
+                    "field": "Longitude",
+                    "as": "mean_longitude"
+                    }],
+                    "groupby": ["Station name"]
                 }
+                ],
+            "mark": {
+                "type": "circle",
+                "size": 100
+            },
+            "encoding": {
+                "longitude": {
+                    "field": "mean_longitude"
+                },
+                "latitude": {
+                    "field": "mean_latitude"
+                },
+                "tooltip": {
+                    "field": "Station name"
+                }
+                }
+            }
             ]
         }
         
@@ -57,3 +68,8 @@
     </script>
   </body>
 </html>
+
+
+/*
+
+  */
