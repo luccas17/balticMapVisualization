@@ -11,69 +11,94 @@
         <div id="vis"></div>
     </center>
 
-<!-- For interacting with the graph https://vega.github.io/vega-lite/docs/selection.html-->
+<!-- For interacting with the graph https://vega.github.io/editor/#/custom/vega-lite-->
 
     <script type="text/javascript">
         var yourVlSpec = {
             "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-            "width": 1200,
-            "height": 800,
-            "layer": [
+            "vconcat": [
                 {
-                "data": {
-                    "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
-                    "format": {"type": "topojson", "feature": "continent_Europe_subunits"}
-                },
-                "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "gray"}
+                "width": 1200,
+                "height": 800,
+                "layer": [
+                    {
+                    "data": {
+                        "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
+                        "format": {
+                        "type": "topojson",
+                        "feature": "continent_Europe_subunits"
+                        }
+                    },
+                    "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "gray"}
+                    },
+                    {
+                    "data": {
+                        "url": "https://luccas17.github.io/vegaliteBalticMap/data/odin2_2023-08-28_113735_comma.csv"
+                    },
+                    "transform": [
+                        {
+                        "aggregate": [
+                            {"op": "mean", "field": "Latitude", "as": "mean_latitude"},
+                            {"op": "mean", "field": "Longitude", "as": "mean_longitude"},
+                            {"op": "mean", "field": "Temperature", "as": "mean_temp"}
+                        ],
+                        "groupby": ["Station name"]
+                        }
+                    ],
+                    "params": [
+                        {
+                        "name": "p_select_station",
+                        "select": {
+                            "type": "point",
+                            "fields": ["Station name"]
+                        }
+                        }
+                    ],
+                    "mark": {"type": "circle", "size": 100},
+                    "encoding": {
+                        "longitude": {"field": "mean_longitude"},
+                        "latitude": {"field": "mean_latitude"},
+                        "tooltip": [{"field": "Station name"}],
+                        "color": {
+                        "field": "mean_temp",
+                        "scale": {
+                            "scheme": "yelloworangered",
+                            "reverse": false
+                        }
+                        },
+                        "fillOpacity": {
+                        "condition": {"param": "p_select_station", "value": 1},
+                        "value": 0.3
+                        }
+                    }
+                    }
+                ]
                 },
                 {
+                "width": 1000,
+                "height": 400,
                 "data": {
                     "url": "https://luccas17.github.io/vegaliteBalticMap/data/odin2_2023-08-28_113735_comma.csv"
                 },
                 "transform": [
+                    {"filter": {"param": "p_select_station"}},
                     {
-                    "aggregate": [{
-                    "op": "mean",
-                    "field": "Latitude",
-                    "as": "mean_latitude"
-                    }, 
-                    {
-                        "op": "mean",
-                        "field": "Longitude",
-                        "as": "mean_longitude"
-                    },
-                    {
-                        "op": "mean",
-                        "field": "Temperature",
-                        "as": "mean_temp"
-                    }],
-                    "groupby": ["Station name"]
-                    },
-                    {
-                    "calculate": "'hsl('+(14-datum.mean_temp)*24+', 100%, 50%)'", 
-                    "as": "color"
+                    "calculate": "datetime(datum.Year, datum.Month, datum.Day)",
+                    "as": "date"
                     }
                 ],
-                "mark": {
-                "type": "circle",
-                "size": 100
-                },
+                "mark": "bar",
                 "encoding": {
-                    "longitude": {
-                        "field": "mean_longitude"
-                    },
-                    "latitude": {
-                        "field": "mean_latitude"
-                    },
-                    "tooltip": [{
-                        "field": "Station name"
-                    }],
-                    "color": {
-                    "field": "color"
+                    "x": {"timeUnit": "yearmonth", "field": "date", "type": "ordinal"},
+                    "y": {
+                    "aggregate": "mean",
+                    "field": "Temperature",
+                    "type": "quantitative"
                     }
                 }
                 }
-            ]
+            ],
+            "config": {}
             }
         vegaEmbed('#vis', yourVlSpec);
     </script>
