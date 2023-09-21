@@ -60,11 +60,13 @@
                         "latitude": {"field": "mean_latitude"},
                         "tooltip": [{"field": "Station name"}],
                         "color": {
-                        "field": "mean_temp",
-                        "scale": {
-                            "scheme": "yelloworangered",
-                            "reverse": false
-                        }
+                            "field": "mean_temp",
+                            "title": "Mean Temperature",
+                            "type": "quantitative",
+                            "scale": {
+                                "scheme": "yelloworangered",
+                                "reverse": false
+                            }
                         },
                         "fillOpacity": {
                         "condition": {"param": "p_select_station", "value": 1},
