@@ -1,0 +1,548 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "background": "white",
+  "padding": 5,
+  "data": [
+    {"name": "p_select_station_store"},
+    {
+      "name": "source_0",
+      "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/europe.json",
+      "format": {"type": "topojson", "feature": "continent_Europe_subunits"}
+    },
+    {
+      "name": "source_1",
+      "url": "https://luccas17.github.io/vegaliteBalticMap/data/odin2_2023-09-21_140419_comma.csv",
+      "format": {"type": "csv", "delimiter": ","}
+    },
+    {
+      "name": "data_0",
+      "source": "source_1",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": ["Station name"],
+          "ops": ["mean", "mean", "mean"],
+          "fields": ["Latitude", "Longitude", "Temperature"],
+          "as": ["mean_latitude", "mean_longitude", "mean_temp"]
+        },
+        {
+          "type": "geojson",
+          "fields": ["mean_longitude", "mean_latitude"],
+          "signal": "concat_0_layer_1_geojson_0"
+        },
+        {
+          "type": "geopoint",
+          "projection": "projection",
+          "fields": ["mean_longitude", "mean_latitude"],
+          "as": ["concat_0_layer_1_x", "concat_0_layer_1_y"]
+        },
+        {
+          "type": "filter",
+          "expr": "isValid(datum[\"mean_temp\"]) && isFinite(+datum[\"mean_temp\"])"
+        }
+      ]
+    },
+    {
+      "name": "data_1",
+      "source": "source_1",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "!length(data(\"p_select_station_store\")) || vlSelectionTest(\"p_select_station_store\", datum)"
+        },
+        {
+          "type": "formula",
+          "expr": "datetime(datum.Year, datum.Month, datum.Day)",
+          "as": "date"
+        },
+        {
+          "field": "date",
+          "type": "timeunit",
+          "units": ["year", "month"],
+          "as": ["yearmonth_date", "yearmonth_date_end"]
+        }
+      ]
+    },
+    {
+      "name": "data_2",
+      "source": "data_1",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": ["yearmonth_date"],
+          "ops": ["q1", "q3", "median", "min", "max"],
+          "fields": [
+            "Temperature",
+            "Temperature",
+            "Temperature",
+            "Temperature",
+            "Temperature"
+          ],
+          "as": [
+            "lower_box_Temperature",
+            "upper_box_Temperature",
+            "mid_box_Temperature",
+            "min_Temperature",
+            "max_Temperature"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "data_3",
+      "source": "data_2",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "isValid(datum[\"lower_box_Temperature\"]) && isFinite(+datum[\"lower_box_Temperature\"])"
+        }
+      ]
+    },
+    {
+      "name": "data_4",
+      "source": "data_2",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "isValid(datum[\"mid_box_Temperature\"]) && isFinite(+datum[\"mid_box_Temperature\"])"
+        }
+      ]
+    },
+    {
+      "name": "data_5",
+      "source": "data_1",
+      "transform": [
+        {
+          "type": "joinaggregate",
+          "as": ["lower_box_Temperature", "upper_box_Temperature"],
+          "ops": ["q1", "q3"],
+          "fields": ["Temperature", "Temperature"],
+          "groupby": ["yearmonth_date"]
+        }
+      ]
+    },
+    {
+      "name": "data_6",
+      "source": "data_5",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "(datum[\"Temperature\"] < datum[\"lower_box_Temperature\"] - 1.5 * (datum[\"upper_box_Temperature\"] - datum[\"lower_box_Temperature\"])) || (datum[\"Temperature\"] > datum[\"upper_box_Temperature\"] + 1.5 * (datum[\"upper_box_Temperature\"] - datum[\"lower_box_Temperature\"]))"
+        },
+        {
+          "type": "filter",
+          "expr": "isValid(datum[\"Temperature\"]) && isFinite(+datum[\"Temperature\"])"
+        }
+      ]
+    },
+    {
+      "name": "data_7",
+      "source": "data_5",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "(datum[\"lower_box_Temperature\"] - 1.5 * (datum[\"upper_box_Temperature\"] - datum[\"lower_box_Temperature\"]) <= datum[\"Temperature\"]) && (datum[\"Temperature\"] <= datum[\"upper_box_Temperature\"] + 1.5 * (datum[\"upper_box_Temperature\"] - datum[\"lower_box_Temperature\"]))"
+        },
+        {
+          "type": "aggregate",
+          "groupby": ["yearmonth_date"],
+          "ops": ["min", "max", "min", "max"],
+          "fields": [
+            "Temperature",
+            "Temperature",
+            "lower_box_Temperature",
+            "upper_box_Temperature"
+          ],
+          "as": [
+            "lower_whisker_Temperature",
+            "upper_whisker_Temperature",
+            "lower_box_Temperature",
+            "upper_box_Temperature"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "data_8",
+      "source": "data_7",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "isValid(datum[\"lower_whisker_Temperature\"]) && isFinite(+datum[\"lower_whisker_Temperature\"])"
+        }
+      ]
+    },
+    {
+      "name": "data_9",
+      "source": "data_7",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "isValid(datum[\"upper_box_Temperature\"]) && isFinite(+datum[\"upper_box_Temperature\"])"
+        }
+      ]
+    }
+  ],
+  "projections": [
+    {
+      "name": "projection",
+      "center": [17, 59],  // Center the map on the Baltic Sea
+      "scale": 3000,       // Adjust the scale for zooming
+      "clipExtent": [[0, 200], [800,900]] // [[x0, y0], [x1, y1]]. (x0, y0) is the top-left corner, and (x1, y1) is the bottom-right corner
+    }
+  ],
+  "signals": [
+    {"name": "concat_0_width", "value": 1200},
+    {"name": "concat_0_height", "value": 800},
+    {"name": "concat_1_width", "value": 1000},
+    {"name": "concat_1_height", "value": 400},
+    {
+      "name": "unit",
+      "value": {},
+      "on": [
+        {"events": "mousemove", "update": "isTuple(group()) ? group() : unit"}
+      ]
+    },
+    {
+      "name": "p_select_station",
+      "update": "vlSelectionResolve(\"p_select_station_store\", \"union\", true, true)"
+    }
+  ],
+  "layout": {"padding": 20, "columns": 1, "bounds": "full", "align": "each"},
+  "marks": [
+    {
+      "type": "group",
+      "name": "concat_0_group",
+      "style": "view",
+      "encode": {
+        "update": {
+          "width": {"signal": "concat_0_width"},
+          "height": {"signal": "concat_0_height"}
+        }
+      },
+      "signals": [
+        {
+          "name": "p_select_station_tuple",
+          "on": [
+            {
+              "events": [{"source": "scope", "type": "click"}],
+              "update": "datum && item().mark.marktype !== 'group' && indexof(item().mark.role, 'legend') < 0 ? {unit: \"concat_0_layer_1\", fields: p_select_station_tuple_fields, values: [(item().isVoronoi ? datum.datum : datum)[\"Station name\"]]} : null",
+              "force": true
+            },
+            {
+              "events": [{"source": "view", "type": "dblclick"}],
+              "update": "null"
+            }
+          ]
+        },
+        {
+          "name": "p_select_station_tuple_fields",
+          "value": [{"type": "E", "field": "Station name"}]
+        },
+        {
+          "name": "p_select_station_toggle",
+          "value": false,
+          "on": [
+            {
+              "events": [{"source": "scope", "type": "click"}],
+              "update": "event.shiftKey"
+            },
+            {
+              "events": [{"source": "view", "type": "dblclick"}],
+              "update": "false"
+            }
+          ]
+        },
+        {
+          "name": "p_select_station_modify",
+          "on": [
+            {
+              "events": {"signal": "p_select_station_tuple"},
+              "update": "modify(\"p_select_station_store\", p_select_station_toggle ? null : p_select_station_tuple, p_select_station_toggle ? null : true, p_select_station_toggle ? p_select_station_tuple : null)"
+            }
+          ]
+        }
+      ],
+      "marks": [
+        {
+          "name": "concat_0_layer_0_marks",
+          "type": "shape",
+          "style": ["geoshape"],
+          "interactive": true,
+          "from": {"data": "source_0"},
+          "encode": {
+            "update": {
+              "fill": {"value": "lightgray"},
+              "stroke": {"value": "gray"},
+              "ariaRoleDescription": {"value": "geoshape"}
+            }
+          },
+          "transform": [{"type": "geoshape", "projection": "projection"}]
+        },
+        {
+          "name": "concat_0_layer_1_marks",
+          "type": "symbol",
+          "style": ["circle"],
+          "interactive": true,
+          "from": {"data": "data_0"},
+          "encode": {
+            "update": {
+              "opacity": {"value": 0.7},
+              "size": {"value": 100},
+              "fill": {"scale": "color", "field": "mean_temp"},
+              "fillOpacity": [
+                {
+                  "test": "!length(data(\"p_select_station_store\")) || vlSelectionTest(\"p_select_station_store\", datum)",
+                  "value": 1
+                },
+                {"value": 0.3}
+              ],
+              "tooltip": {
+                "signal": "{\"Station name\": isValid(datum[\"Station name\"]) ? datum[\"Station name\"] : \"\"+datum[\"Station name\"]}"
+              },
+              "ariaRoleDescription": {"value": "circle"},
+              "description": {
+                "signal": "\"mean_longitude: \" + (format(datum[\"mean_longitude\"], \"\")) + \"; mean_latitude: \" + (format(datum[\"mean_latitude\"], \"\")) + \"; Mean Temperature: \" + (format(datum[\"mean_temp\"], \"\")) + \"; Station name: \" + (isValid(datum[\"Station name\"]) ? datum[\"Station name\"] : \"\"+datum[\"Station name\"])"
+              },
+              "x": {"field": "concat_0_layer_1_x"},
+              "y": {"field": "concat_0_layer_1_y"},
+              "shape": {"value": "circle"}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "name": "concat_1_group",
+      "style": "cell",
+      "encode": {
+        "update": {
+          "width": {"signal": "concat_1_width"},
+          "height": {"signal": "concat_1_height"}
+        }
+      },
+      "marks": [
+        {
+          "name": "concat_1_layer_0_layer_0_marks",
+          "type": "symbol",
+          "style": ["point", "boxplot-outliers"],
+          "interactive": false,
+          "from": {"data": "data_6"},
+          "encode": {
+            "update": {
+              "opacity": {"value": 0.7},
+              "fill": {"value": "transparent"},
+              "stroke": {"value": "#4c78a8"},
+              "ariaRoleDescription": {"value": "point"},
+              "description": {
+                "signal": "\"date (year-month): \" + (timeFormat(datum[\"yearmonth_date\"], '%b %d, %Y')) + \"; Temperature: \" + (format(datum[\"Temperature\"], \"\"))"
+              },
+              "x": {
+                "scale": "concat_1_x",
+                "field": "yearmonth_date",
+                "band": 0.5
+              },
+              "y": {"scale": "concat_1_y", "field": "Temperature"}
+            }
+          }
+        },
+        {
+          "name": "concat_1_layer_0_layer_1_layer_0_marks",
+          "type": "rule",
+          "style": ["rule", "boxplot-rule"],
+          "interactive": true,
+          "aria": false,
+          "from": {"data": "data_8"},
+          "encode": {
+            "update": {
+              "stroke": {"value": "black"},
+              "tooltip": {
+                "signal": "{\"Upper Whisker of Temperature\": format(datum[\"upper_whisker_Temperature\"], \"\"), \"Lower Whisker of Temperature\": format(datum[\"lower_whisker_Temperature\"], \"\"), \"date (year-month)\": isValid(datum[\"yearmonth_date\"]) ? datum[\"yearmonth_date\"] : \"\"+datum[\"yearmonth_date\"]}"
+              },
+              "x": {
+                "scale": "concat_1_x",
+                "field": "yearmonth_date",
+                "band": 0.5
+              },
+              "y": {
+                "scale": "concat_1_y",
+                "field": "lower_whisker_Temperature"
+              },
+              "y2": {"scale": "concat_1_y", "field": "lower_box_Temperature"}
+            }
+          }
+        },
+        {
+          "name": "concat_1_layer_0_layer_1_layer_1_marks",
+          "type": "rule",
+          "style": ["rule", "boxplot-rule"],
+          "interactive": true,
+          "aria": false,
+          "from": {"data": "data_9"},
+          "encode": {
+            "update": {
+              "stroke": {"value": "black"},
+              "tooltip": {
+                "signal": "{\"Upper Whisker of Temperature\": format(datum[\"upper_whisker_Temperature\"], \"\"), \"Lower Whisker of Temperature\": format(datum[\"lower_whisker_Temperature\"], \"\"), \"date (year-month)\": isValid(datum[\"yearmonth_date\"]) ? datum[\"yearmonth_date\"] : \"\"+datum[\"yearmonth_date\"]}"
+              },
+              "x": {
+                "scale": "concat_1_x",
+                "field": "yearmonth_date",
+                "band": 0.5
+              },
+              "y": {"scale": "concat_1_y", "field": "upper_box_Temperature"},
+              "y2": {
+                "scale": "concat_1_y",
+                "field": "upper_whisker_Temperature"
+              }
+            }
+          }
+        },
+        {
+          "name": "concat_1_layer_1_layer_0_marks",
+          "type": "rect",
+          "style": ["bar", "boxplot-box"],
+          "interactive": true,
+          "from": {"data": "data_3"},
+          "encode": {
+            "update": {
+              "ariaRoleDescription": {"value": "box"},
+              "fill": {"value": "#4c78a8"},
+              "tooltip": {
+                "signal": "{\"Max of Temperature\": format(datum[\"max_Temperature\"], \"\"), \"Q3 of Temperature\": format(datum[\"upper_box_Temperature\"], \"\"), \"Median of Temperature\": format(datum[\"mid_box_Temperature\"], \"\"), \"Q1 of Temperature\": format(datum[\"lower_box_Temperature\"], \"\"), \"Min of Temperature\": format(datum[\"min_Temperature\"], \"\"), \"date (year-month)\": isValid(datum[\"yearmonth_date\"]) ? datum[\"yearmonth_date\"] : \"\"+datum[\"yearmonth_date\"]}"
+              },
+              "description": {
+                "signal": "\"date (year-month): \" + (timeFormat(datum[\"yearmonth_date\"], '%b %d, %Y')) + \"; Temperature: \" + (format(datum[\"lower_box_Temperature\"], \"\")) + \"; upper_box_Temperature: \" + (format(datum[\"upper_box_Temperature\"], \"\")) + \"; Max of Temperature: \" + (format(datum[\"max_Temperature\"], \"\")) + \"; Q3 of Temperature: \" + (format(datum[\"upper_box_Temperature\"], \"\")) + \"; Median of Temperature: \" + (format(datum[\"mid_box_Temperature\"], \"\")) + \"; Q1 of Temperature: \" + (format(datum[\"lower_box_Temperature\"], \"\")) + \"; Min of Temperature: \" + (format(datum[\"min_Temperature\"], \"\"))"
+              },
+              "xc": {
+                "scale": "concat_1_x",
+                "field": "yearmonth_date",
+                "band": 0.5
+              },
+              "width": {"value": 14},
+              "y": {"scale": "concat_1_y", "field": "lower_box_Temperature"},
+              "y2": {"scale": "concat_1_y", "field": "upper_box_Temperature"}
+            }
+          }
+        },
+        {
+          "name": "concat_1_layer_1_layer_1_marks",
+          "type": "rect",
+          "style": ["tick", "boxplot-median"],
+          "interactive": true,
+          "aria": false,
+          "from": {"data": "data_4"},
+          "encode": {
+            "update": {
+              "opacity": {"value": 0.7},
+              "fill": {"value": "white"},
+              "tooltip": {
+                "signal": "{\"Max of Temperature\": format(datum[\"max_Temperature\"], \"\"), \"Q3 of Temperature\": format(datum[\"upper_box_Temperature\"], \"\"), \"Median of Temperature\": format(datum[\"mid_box_Temperature\"], \"\"), \"Q1 of Temperature\": format(datum[\"lower_box_Temperature\"], \"\"), \"Min of Temperature\": format(datum[\"min_Temperature\"], \"\"), \"date (year-month)\": isValid(datum[\"yearmonth_date\"]) ? datum[\"yearmonth_date\"] : \"\"+datum[\"yearmonth_date\"]}"
+              },
+              "xc": {
+                "scale": "concat_1_x",
+                "field": "yearmonth_date",
+                "band": 0.5
+              },
+              "yc": {"scale": "concat_1_y", "field": "mid_box_Temperature"},
+              "width": {"value": 14},
+              "height": {"value": 1}
+            }
+          }
+        }
+      ],
+      "axes": [
+        {
+          "scale": "concat_1_y",
+          "orient": "left",
+          "gridScale": "concat_1_x",
+          "grid": true,
+          "tickCount": {"signal": "ceil(concat_1_height/40)"},
+          "domain": false,
+          "labels": false,
+          "aria": false,
+          "maxExtent": 0,
+          "minExtent": 0,
+          "ticks": false,
+          "zindex": 0
+        },
+        {
+          "scale": "concat_1_x",
+          "orient": "bottom",
+          "grid": false,
+          "title": "date (year-month)",
+          "formatType": "time",
+          "labelAlign": "right",
+          "labelAngle": 270,
+          "labelBaseline": "middle",
+          "zindex": 0
+        },
+        {
+          "scale": "concat_1_y",
+          "orient": "left",
+          "grid": false,
+          "title": "Temperature",
+          "labelOverlap": true,
+          "tickCount": {"signal": "ceil(concat_1_height/40)"},
+          "zindex": 0
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "color",
+      "type": "linear",
+      "domain": {"data": "data_0", "field": "mean_temp"},
+      "range": {"scheme": "yelloworangered"},
+      "reverse": false,
+      "interpolate": "hcl",
+      "zero": false
+    },
+    {
+      "name": "concat_1_x",
+      "type": "band",
+      "domain": {
+        "fields": [
+          {"data": "data_6", "field": "yearmonth_date"},
+          {"data": "data_8", "field": "yearmonth_date"},
+          {"data": "data_9", "field": "yearmonth_date"},
+          {"data": "data_3", "field": "yearmonth_date"},
+          {"data": "data_4", "field": "yearmonth_date"}
+        ],
+        "sort": true
+      },
+      "range": [0, {"signal": "concat_1_width"}],
+      "paddingInner": 0,
+      "paddingOuter": 0
+    },
+    {
+      "name": "concat_1_y",
+      "type": "linear",
+      "domain": {
+        "fields": [
+          {"data": "data_6", "field": "Temperature"},
+          {"data": "data_8", "field": "lower_whisker_Temperature"},
+          {"data": "data_8", "field": "lower_box_Temperature"},
+          {"data": "data_9", "field": "upper_box_Temperature"},
+          {"data": "data_9", "field": "upper_whisker_Temperature"},
+          {"data": "data_3", "field": "lower_box_Temperature"},
+          {"data": "data_3", "field": "upper_box_Temperature"},
+          {"data": "data_4", "field": "mid_box_Temperature"}
+        ]
+      },
+      "range": [{"signal": "concat_1_height"}, 0],
+      "nice": true,
+      "zero": true
+    }
+  ],
+  "legends": [
+    {
+      "title": "Mean Temperature",
+      "fill": "color",
+      "gradientLength": {"signal": "clamp(concat_0_height, 64, 200)"},
+      "encode": {"gradient": {"update": {"opacity": {"value": 0.7}}}}
+    }
+  ]
+}
