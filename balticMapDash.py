@@ -105,7 +105,7 @@ histogram_temp = FigureWidget([histogram_temp_trace])
 app.layout = html.Div([  
     html.H1(children='Baltic Data', style={'textAlign':'center'}),
     html.Button('Reset plots', id='reset', n_clicks=0),
-    # First Row: Two graphs side by side
+    # First Row: Baltic map and histogram side by side
     html.Div([
         html.Div([
             dcc.Graph(id='balticMap', figure=baltic_map),
@@ -116,7 +116,7 @@ app.layout = html.Div([
         ], style={'width': '50%', 'display': 'inline-block'}),
     ]),
     
-    # Second Row: Two graphs below each other
+    # Second Row: Two boxplots below each other
     html.Div([
         html.Div([
             dcc.Graph(id='boxplotTemperature', figure=boxplot_temp),
@@ -143,8 +143,8 @@ app.layout = html.Div([
     prevent_initial_call=True
 )
 def reset_data(btn):
+    # Update the baltic map graph
     groupedData = data.groupby(["Station name"], as_index=False).mean()
-
     baltic_map_trace = Scattergeo(
         lon=groupedData["Longitude"],
         lat=groupedData["Latitude"],
@@ -153,10 +153,10 @@ def reset_data(btn):
             "size": 7
         }
     )
-
     baltic_map = FigureWidget([baltic_map_trace])
     baltic_map.update_layout(baltic_map_layout)
-
+    
+    # Update the pressure boxplot 
     boxplot_temp_trace = create_boxplot(data, "Temperature")
     boxplot_temp = FigureWidget([boxplot_temp_trace])
     boxplot_temp.update_layout(boxplot_temp_layout)
@@ -206,23 +206,18 @@ def balticMap_update_graphs(current_data, last_updated, last_updated_data, selec
     
     # Update the temperature boxplot 
     boxplot_temp_trace = create_boxplot(filteredData, "Temperature")
-
     boxplot_temp = FigureWidget([boxplot_temp_trace])
-
     boxplot_temp.update_layout(boxplot_temp_layout)
 
     # Update the pressure boxplot 
     boxplot_press_trace = create_boxplot(filteredData, "Pressure")
-
     boxplot_press = FigureWidget([boxplot_press_trace])
-
     boxplot_press.update_layout(boxplot_press_layout)
 
     # Update the histogram boxplot 
     histogram_temp_trace = Histogram(
         x=filteredData["Temperature"]
     )
-
     histogram_temp = FigureWidget([histogram_temp_trace])
 
     return boxplot_temp, boxplot_press, histogram_temp, filteredData.to_json(), "balticMap", last_updated_data.to_json()
@@ -260,20 +255,16 @@ def histogram_update_graphs(current_data, last_updated, last_updated_data, selec
 
     # Update the temperature boxplot 
     boxplot_temp_trace = create_boxplot(filteredData, "Temperature")
-
     boxplot_temp = FigureWidget([boxplot_temp_trace])
-
     boxplot_temp.update_layout(boxplot_temp_layout)
 
     # Update the pressure boxplot 
     boxplot_press_trace = create_boxplot(filteredData, "Pressure")
-
     boxplot_press = FigureWidget([boxplot_press_trace])
-
     boxplot_press.update_layout(boxplot_press_layout)
     
+    # Update the baltic map graph
     groupedData = filteredData.groupby(["Station name"], as_index=False).mean()
-    
     baltic_map_trace = Scattergeo(
         lon=groupedData["Longitude"],
         lat=groupedData["Latitude"],
@@ -282,14 +273,10 @@ def histogram_update_graphs(current_data, last_updated, last_updated_data, selec
             "size": 7
         }
     )
-
     baltic_map = FigureWidget([baltic_map_trace])
-
     baltic_map.update_layout(baltic_map_layout)
 
     return boxplot_temp, boxplot_press, baltic_map, filteredData.to_json(), "histogram", last_updated_data.to_json()
-
-# If we want multiple update functions set: allow_duplicate=True
 
 if __name__ == '__main__':
     app.run(debug=True)
