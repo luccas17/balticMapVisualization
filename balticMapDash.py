@@ -4,7 +4,7 @@ import pandas as pd
 from plotly.graph_objects import *
 from dash import html, dcc
 
-data = pd.read_csv("https://luccas17.github.io/vegaliteBalticMap/data/odin2_2023-09-21_140419_comma.csv")
+data = pd.read_csv("https://luccas17.github.io/balticMapVisualization/data/odin2_2023-09-21_140419_comma.csv")
 
 data["Date"] = pd.to_datetime(data["Month"], format="%m")
 
